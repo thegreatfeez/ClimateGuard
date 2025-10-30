@@ -2377,3 +2377,164 @@ export const RewardDistributorABI = [
     "inputs": []
   }
 ]
+
+
+export const DAOVerifierABI = [
+  // View Functions
+  {
+    "type": "function",
+    "name": "tracker",
+    "inputs": [],
+    "outputs": [{"name": "", "type": "address"}],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "token",
+    "inputs": [],
+    "outputs": [{"name": "", "type": "address"}],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MIN_VERIFIER_STAKE",
+    "inputs": [],
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "MIN_VOTES_REQUIRED",
+    "inputs": [],
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "isVerifier",
+    "inputs": [{"name": "", "type": "address"}],
+    "outputs": [{"name": "", "type": "bool"}],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "verifierCount",
+    "inputs": [],
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "requestCount",
+    "inputs": [],
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getVerificationRequest",
+    "inputs": [{"name": "requestId", "type": "uint256"}],
+    "outputs": [
+      {"name": "user", "type": "address"},
+      {"name": "activityId", "type": "uint256"},
+      {"name": "proposedPoints", "type": "uint256"},
+      {"name": "votesFor", "type": "uint256"},
+      {"name": "votesAgainst", "type": "uint256"},
+      {"name": "executed", "type": "bool"},
+      {"name": "createdAt", "type": "uint256"}
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "hasVoted",
+    "inputs": [
+      {"name": "requestId", "type": "uint256"},
+      {"name": "verifier", "type": "address"}
+    ],
+    "outputs": [{"name": "", "type": "bool"}],
+    "stateMutability": "view"
+  },
+
+  // Write Functions
+  {
+    "type": "function",
+    "name": "becomeVerifier",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "removeVerifier",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "requestVerification",
+    "inputs": [
+      {"name": "user", "type": "address"},
+      {"name": "activityId", "type": "uint256"},
+      {"name": "proposedPoints", "type": "uint256"}
+    ],
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "vote",
+    "inputs": [
+      {"name": "requestId", "type": "uint256"},
+      {"name": "approve", "type": "bool"}
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+
+  // Events
+  {
+    "type": "event",
+    "name": "VerifierAdded",
+    "inputs": [
+      {"name": "verifier", "type": "address", "indexed": true}
+    ]
+  },
+  {
+    "type": "event",
+    "name": "VerifierRemoved",
+    "inputs": [
+      {"name": "verifier", "type": "address", "indexed": true}
+    ]
+  },
+  {
+    "type": "event",
+    "name": "VerificationRequested",
+    "inputs": [
+      {"name": "requestId", "type": "uint256", "indexed": true},
+      {"name": "user", "type": "address", "indexed": true},
+      {"name": "activityId", "type": "uint256", "indexed": false},
+      {"name": "proposedPoints", "type": "uint256", "indexed": false}
+    ]
+  },
+  {
+    "type": "event",
+    "name": "VoteCast",
+    "inputs": [
+      {"name": "requestId", "type": "uint256", "indexed": true},
+      {"name": "verifier", "type": "address", "indexed": true},
+      {"name": "vote", "type": "bool", "indexed": false}
+    ]
+  },
+  {
+    "type": "event",
+    "name": "VerificationExecuted",
+    "inputs": [
+      {"name": "requestId", "type": "uint256", "indexed": true},
+      {"name": "user", "type": "address", "indexed": true},
+      {"name": "activityId", "type": "uint256", "indexed": false},
+      {"name": "approved", "type": "bool", "indexed": false}
+    ]
+  }
+];

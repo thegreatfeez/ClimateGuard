@@ -1,6 +1,5 @@
-// src/pages/LandingPage.jsx
 import { useState } from 'react';
-import { Cloud, Shield, Coins, Users, TrendingUp, ArrowRight, Leaf, Zap, Globe } from 'lucide-react';
+import { Cloud, Shield, Coins, Users, TrendingUp, ArrowRight, Leaf, Zap, Globe, Award } from 'lucide-react';
 
 function LandingPage() {
   const [stats] = useState({
@@ -9,10 +8,6 @@ function LandingPage() {
     activeUsers: 1834,
     tokensEarned: 45620
   });
-
-  const scrollToSection = (id) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a1f1a] via-[#0d2621] to-[#0a1f1a]">
@@ -24,12 +19,6 @@ function LandingPage() {
               <Cloud className="text-[#22c55e]" size={28} />
               <span className="text-white text-xl font-bold">ClimateGuard</span>
             </div>
-            <button
-              onClick={() => window.location.hash = '#dashboard'}
-              className="bg-[#22c55e] hover:bg-[#16a34a] text-white font-semibold px-6 py-2 rounded-lg transition"
-            >
-              Launch App
-            </button>
           </div>
         </div>
       </nav>
@@ -69,25 +58,90 @@ function LandingPage() {
             personalized alerts, and blockchain rewards for eco-friendly actions.
           </p>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <button
-              onClick={() => window.location.hash = '#dashboard'}
-              className="group bg-[#22c55e] hover:bg-[#16a34a] text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg shadow-[#22c55e]/50 flex items-center justify-center space-x-2"
-            >
-              <Cloud size={24} />
-              <span>Launch App</span>
-              <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-            </button>
+          {/* DUAL PORTAL BUTTONS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-16">
             
-            <button
-              onClick={() => scrollToSection('dao-section')}
-              className="group bg-white/10 hover:bg-white/20 text-white font-bold px-8 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 backdrop-blur-sm border border-white/20 flex items-center justify-center space-x-2"
-            >
-              <Users size={24} />
-              <span>Join ClimaQ DAO</span>
-              <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-            </button>
+            {/* USER PORTAL */}
+            <div className="bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-2xl p-8 text-left transform hover:scale-105 transition-all duration-300 shadow-2xl shadow-[#22c55e]/30">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Leaf size={28} className="text-white" />
+                </div>
+                <h2 className="text-white text-2xl font-bold">User Portal</h2>
+              </div>
+              
+              <p className="text-white/90 mb-6 text-sm">
+                Track your carbon footprint, receive weather alerts, and earn CGT tokens for eco-friendly activities.
+              </p>
+
+              <ul className="space-y-2 mb-6">
+                <li className="flex items-center space-x-2 text-white text-sm">
+                  <span className="text-white">✓</span>
+                  <span>Real-time weather alerts</span>
+                </li>
+                <li className="flex items-center space-x-2 text-white text-sm">
+                  <span className="text-white">✓</span>
+                  <span>Carbon footprint tracking</span>
+                </li>
+                <li className="flex items-center space-x-2 text-white text-sm">
+                  <span className="text-white">✓</span>
+                  <span>Earn CGT token rewards</span>
+                </li>
+                <li className="flex items-center space-x-2 text-white text-sm">
+                  <span className="text-white">✓</span>
+                  <span>AI climate assistant</span>
+                </li>
+              </ul>
+
+              <button
+                onClick={() => window.location.hash = '#user-dashboard'}
+                className="w-full bg-white text-[#22c55e] hover:bg-gray-100 font-bold px-6 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center space-x-2"
+              >
+                <span>Enter User Portal</span>
+                <ArrowRight size={20} />
+              </button>
+            </div>
+
+            {/* STAKEHOLDER PORTAL */}
+            <div className="bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl p-8 text-left transform hover:scale-105 transition-all duration-300 shadow-2xl shadow-purple-500/30">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Shield size={28} className="text-white" />
+                </div>
+                <h2 className="text-white text-2xl font-bold">Stakeholder Portal</h2>
+              </div>
+              
+              <p className="text-white/90 mb-6 text-sm">
+                For NGOs, investors, and DAO members. Verify activities, vote on proposals, and govern the platform.
+              </p>
+
+              <ul className="space-y-2 mb-6">
+                <li className="flex items-center space-x-2 text-white text-sm">
+                  <span className="text-white">✓</span>
+                  <span>Verify eco-activities</span>
+                </li>
+                <li className="flex items-center space-x-2 text-white text-sm">
+                  <span className="text-white">✓</span>
+                  <span>Vote on DAO proposals</span>
+                </li>
+                <li className="flex items-center space-x-2 text-white text-sm">
+                  <span className="text-white">✓</span>
+                  <span>Platform governance</span>
+                </li>
+                <li className="flex items-center space-x-2 text-white text-sm">
+                  <span className="text-white">✓</span>
+                  <span>Community oversight</span>
+                </li>
+              </ul>
+
+              <button
+                onClick={() => window.location.hash = '#stakeholder-dashboard'}
+                className="w-full bg-white text-purple-600 hover:bg-gray-100 font-bold px-6 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center space-x-2"
+              >
+                <span>Enter Stakeholder Portal</span>
+                <ArrowRight size={20} />
+              </button>
+            </div>
           </div>
 
           {/* AI Illustration */}
@@ -215,18 +269,18 @@ function LandingPage() {
       </section>
 
       {/* DAO Section */}
-      <section id="dao-section" className="py-20 bg-gradient-to-br from-[#153029] to-[#0a1f1a]">
+      <section className="py-20 bg-gradient-to-br from-[#153029] to-[#0a1f1a]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <div className="inline-flex items-center space-x-2 bg-purple-500/10 border border-purple-500/30 rounded-full px-6 py-2 mb-6">
               <Users className="text-purple-400" size={20} />
-              <span className="text-purple-400 font-semibold">ClimaQ DAO</span>
+              <span className="text-purple-400 font-semibold">Community Governed</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Shape the Future Together
+              Decentralized Climate Action
             </h2>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              Join our decentralized autonomous organization and vote on climate initiatives
+              Platform decisions are made by stakeholders through transparent on-chain voting
             </p>
           </div>
 
@@ -250,39 +304,18 @@ function LandingPage() {
             </div>
 
             <div className="bg-[#0a1f1a]/50 backdrop-blur-sm rounded-2xl p-8 border border-purple-500/30">
-              <h3 className="text-white text-xl font-bold mb-4">Your Voice Matters</h3>
+              <h3 className="text-white text-xl font-bold mb-4">Transparent Operations</h3>
               <p className="text-gray-400 mb-6">
-                Token holders have voting power proportional to their stake. 
-                Every decision is transparent and recorded on-chain.
+                All decisions, verifications, and token distributions are recorded on-chain. 
+                Complete transparency builds trust in our climate action community.
               </p>
               <button 
-                onClick={() => window.location.hash = '#dao'}
+                onClick={() => window.location.hash = '#stakeholder-dashboard'}
                 className="bg-purple-500 hover:bg-purple-600 text-white font-bold px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105"
               >
-                Join the DAO
+                Join as Stakeholder
               </button>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="bg-gradient-to-br from-[#22c55e] to-[#16a34a] rounded-3xl p-12 shadow-2xl shadow-[#22c55e]/30">
-            <h2 className="text-white text-4xl md:text-5xl font-bold mb-6">
-              Ready to Make an Impact?
-            </h2>
-            <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
-              Join thousands of climate guardians protecting our planet and earning rewards
-            </p>
-            <button
-              onClick={() => window.location.hash = '#dashboard'}
-              className="bg-white text-[#22c55e] hover:bg-gray-100 font-bold px-12 py-4 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg inline-flex items-center space-x-2"
-            >
-              <span>Get Started Now</span>
-              <ArrowRight size={20} />
-            </button>
           </div>
         </div>
       </section>

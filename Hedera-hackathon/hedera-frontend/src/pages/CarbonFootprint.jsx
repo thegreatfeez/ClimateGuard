@@ -1,4 +1,3 @@
-// src/pages/CarbonFootprint.jsx
 import { useState, useEffect } from 'react';
 import { Leaf, TrendingUp, TrendingDown, Calendar, CheckCircle, Clock } from 'lucide-react';
 import { useWeb3 } from '../context/Web3Context';

@@ -1,28 +1,152 @@
-const OPENWEATHER_API_KEY = 'YOUR_API_KEY_HERE'; // Get free key from openweathermap.org
+
+const OPENWEATHER_API_KEY = '579377576879717ba6d659fd240accb8';
 const BASE_URL = 'https://api.openweathermap.org/data/2.5';
 
 /**
- * Get user's location using browser geolocation
+ * Get user's location using browser geolocation with detailed error handling
  */
 export const getUserLocation = () => {
   return new Promise((resolve, reject) => {
+    // Check if geolocation is supported
     if (!navigator.geolocation) {
-      reject(new Error('Geolocation not supported'));
+      const error = new Error('GEOLOCATION_NOT_SUPPORTED');
+      error.details = 'Your browser does not support geolocation';
+      reject(error);
       return;
     }
 
+    // Check if we're on a secure context
+    const isSecure = window.isSecureContext || window.location.protocol === 'https:' || window.location.hostname === 'localhost';
+    
+    if (!isSecure) {
+      console.warn('⚠️ Geolocation may not work on insecure HTTP connections');
+      console.warn('💡 Try accessing via localhost or HTTPS');
+    }
+
+    console.log('📍 Requesting geolocation with options...');
+    
+    const options = {
+      enableHighAccuracy: true,  // Try to get best accuracy
+      timeout: 10000,            // Wait up to 10 seconds
+      maximumAge: 0              // Don't use cached position
+    };
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        console.log('✅ Geolocation successful!');
+        console.log('📍 Coordinates:', {
+          lat: position.coords.latitude,
+          lon: position.coords.longitude,
+          accuracy: `${Math.round(position.coords.accuracy)}m`
+        });
+        
         resolve({
           lat: position.coords.latitude,
           lon: position.coords.longitude
         });
       },
       (error) => {
-        reject(error);
-      }
+        console.error('❌ Geolocation error:', error);
+        
+        // Provide detailed error messages
+        let userMessage = '';
+        let errorType = '';
+        
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorType = 'PERMISSION_DENIED';
+            userMessage = 'Location access was denied. Please enable location permissions in your browser settings.';
+            console.error('🚫 User denied location permission');
+            console.log('💡 Fix: Click the padlock icon in address bar → Location → Allow');
+            break;
+            
+          case error.POSITION_UNAVAILABLE:
+            errorType = 'POSITION_UNAVAILABLE';
+            userMessage = 'Location information is unavailable. Check your device settings.';
+            console.error('📍 Location unavailable - GPS/network issue');
+            break;
+            
+          case error.TIMEOUT:
+            errorType = 'TIMEOUT';
+            userMessage = 'Location request timed out. Please try again.';
+            console.error('⏱️ Geolocation request timed out');
+            break;
+            
+          default:
+            errorType = 'UNKNOWN';
+            userMessage = 'An unknown error occurred while getting your location.';
+            console.error('❓ Unknown geolocation error');
+        }
+        
+        const customError = new Error(userMessage);
+        customError.type = errorType;
+        customError.originalError = error;
+        reject(customError);
+      },
+      options
     );
   });
+};
+
+/**
+ * Alternative: Get location by IP address (less accurate but works everywhere)
+ */
+export const getLocationByIP = async () => {
+  try {
+    console.log('🌐 Trying IP-based geolocation...');
+    
+    // Using ipapi.co (free, no API key needed)
+    const response = await fetch('https://ipapi.co/json/');
+    const data = await response.json();
+    
+    if (data.latitude && data.longitude) {
+      console.log('✅ IP location found:', {
+        city: data.city,
+        country: data.country_name,
+        lat: data.latitude,
+        lon: data.longitude
+      });
+      
+      return {
+        lat: data.latitude,
+        lon: data.longitude,
+        city: data.city,
+        country: data.country_name,
+        method: 'ip'
+      };
+    }
+    
+    throw new Error('IP geolocation failed');
+  } catch (error) {
+    console.error('❌ IP geolocation error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Smart location detector - tries GPS first, falls back to IP
+ */
+export const getSmartLocation = async () => {
+  try {
+    console.log('🎯 Attempting smart location detection...');
+    
+    // Try GPS first
+    try {
+      const gpsLocation = await getUserLocation();
+      console.log('✅ Using GPS location');
+      return { ...gpsLocation, method: 'gps' };
+    } catch (gpsError) {
+      console.warn('⚠️ GPS failed, trying IP location...', gpsError.type);
+      
+      // If GPS fails, try IP-based location
+      const ipLocation = await getLocationByIP();
+      console.log('✅ Using IP-based location (less accurate)');
+      return ipLocation;
+    }
+  } catch (error) {
+    console.error('❌ All location methods failed');
+    throw new Error('Could not determine your location. Please check your settings and try again.');
+  }
 };
 
 /**
@@ -33,6 +157,11 @@ export const getLocationName = async (lat, lon) => {
     const response = await fetch(
       `${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${OPENWEATHER_API_KEY}`
     );
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
     const data = await response.json();
     return `${data.name}, ${data.sys.country}`;
   } catch (error) {
@@ -49,6 +178,14 @@ export const getCurrentWeather = async (lat, lon) => {
     const response = await fetch(
       `${BASE_URL}/weather?lat=${lat}&lon=${lon}&units=metric&appid=${OPENWEATHER_API_KEY}`
     );
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Invalid API key. Please check your OpenWeather API key.');
+      }
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
     const data = await response.json();
     
     return {
@@ -77,6 +214,14 @@ export const getForecast = async (lat, lon) => {
     const response = await fetch(
       `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${OPENWEATHER_API_KEY}`
     );
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('Invalid API key. Please check your OpenWeather API key.');
+      }
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
     const data = await response.json();
     
     // Group by day
@@ -88,11 +233,13 @@ export const getForecast = async (lat, lon) => {
           temps: [],
           conditions: [],
           rain: 0,
+          wind: 0,
           date: item.dt
         };
       }
       dailyData[date].temps.push(item.main.temp);
       dailyData[date].conditions.push(item.weather[0].main);
+      dailyData[date].wind = Math.max(dailyData[date].wind, item.wind.speed * 3.6);
       if (item.rain) {
         dailyData[date].rain += (item.rain['3h'] || 0);
       }
@@ -110,6 +257,7 @@ export const getForecast = async (lat, lon) => {
         low: minTemp,
         condition: condition,
         rain: Math.round(day.rain),
+        wind: Math.round(day.wind),
         icon: getWeatherIcon(condition)
       };
     });
@@ -126,80 +274,120 @@ export const getForecast = async (lat, lon) => {
  */
 export const generateAlerts = (currentWeather, forecast) => {
   const alerts = [];
+  const now = new Date();
   
-  // High temperature alert
+  // === CURRENT ALERTS ===
+  
+  // Extreme heat alert
   if (currentWeather.temp >= 35) {
     alerts.push({
-      id: Date.now() + 1,
+      id: `heat-current-${now.getTime()}`,
       category: 'Heatwave',
-      severity: currentWeather.temp >= 38 ? 'Critical' : 'High',
+      severity: currentWeather.temp >= 40 ? 'Critical' : currentWeather.temp >= 38 ? 'High' : 'Medium',
       location: currentWeather.location,
-      details: `Extreme heat alert! Temperature at ${currentWeather.temp}°C. Stay hydrated and avoid outdoor activities during peak hours.`,
-      timestamp: new Date(),
+      details: `Extreme heat alert! Current temperature: ${currentWeather.temp}°C (Feels like: ${currentWeather.feelsLike}°C). ${currentWeather.temp >= 40 ? 'CRITICAL - Life-threatening conditions.' : 'High risk of heat exhaustion.'}`,
+      timestamp: now,
       type: 'current',
       tips: [
-        'Drink water regularly',
-        'Stay indoors between 12-3 PM',
-        'Check on vulnerable individuals'
+        'Stay hydrated - drink water every 15-20 minutes',
+        'Avoid outdoor activities between 12 PM - 4 PM',
+        'Check on elderly neighbors and vulnerable individuals',
+        'Never leave children or pets in vehicles'
       ]
     });
   }
   
   // High humidity + heat
-  if (currentWeather.temp >= 30 && currentWeather.humidity >= 70) {
+  if (currentWeather.temp >= 28 && currentWeather.humidity >= 70) {
     alerts.push({
-      id: Date.now() + 2,
-      category: 'AirQuality',
-      severity: 'Medium',
+      id: `humidity-current-${now.getTime()}`,
+      category: 'Heatwave',
+      severity: currentWeather.temp >= 32 ? 'High' : 'Medium',
       location: currentWeather.location,
-      details: `High humidity (${currentWeather.humidity}%) combined with heat. Uncomfortable conditions expected.`,
-      timestamp: new Date(),
+      details: `High heat index! Temp ${currentWeather.temp}°C with ${currentWeather.humidity}% humidity. Feels much hotter.`,
+      timestamp: now,
       type: 'current',
       tips: [
-        'Use air conditioning if available',
-        'Stay in well-ventilated areas',
-        'Reduce physical exertion'
+        'Stay in air-conditioned spaces',
+        'Reduce physical activity',
+        'Watch for heat illness signs'
       ]
     });
   }
-  
-  // Heavy rain forecast
+
+  // Strong winds
+  if (currentWeather.windSpeed >= 40) {
+    alerts.push({
+      id: `wind-current-${now.getTime()}`,
+      category: 'Storm',
+      severity: currentWeather.windSpeed >= 60 ? 'High' : 'Medium',
+      location: currentWeather.location,
+      details: `Strong winds: ${currentWeather.windSpeed} km/h. ${currentWeather.windSpeed >= 60 ? 'Damaging winds possible.' : 'Exercise caution.'}`,
+      timestamp: now,
+      type: 'current',
+      tips: [
+        'Secure loose outdoor items',
+        'Avoid parking under trees',
+        'Drive carefully'
+      ]
+    });
+  }
+
+  // Thunderstorms
+  if (currentWeather.condition === 'Thunderstorm') {
+    alerts.push({
+      id: `storm-current-${now.getTime()}`,
+      category: 'Storm',
+      severity: 'High',
+      location: currentWeather.location,
+      details: `Active thunderstorm! Lightning, heavy rain, and strong winds present.`,
+      timestamp: now,
+      type: 'current',
+      tips: [
+        'Stay indoors',
+        'Unplug electronics',
+        'Avoid windows',
+        'Wait 30 min after last thunder'
+      ]
+    });
+  }
+
+  // === FUTURE ALERTS ===
   forecast.forEach((day, index) => {
+    const forecastDate = day.date;
+    
+    // Heavy rain
     if (day.rain > 50) {
-      const daysFromNow = index;
       alerts.push({
-        id: Date.now() + 10 + index,
-        category: 'Flood',
+        id: `rain-future-${forecastDate.getTime()}`,
+        category: day.rain > 100 ? 'Flood' : 'Storm',
         severity: day.rain > 100 ? 'High' : 'Medium',
         location: currentWeather.location,
-        details: `Heavy rainfall forecast (${day.rain}mm) in ${daysFromNow} day${daysFromNow !== 1 ? 's' : ''}. Flooding possible in low-lying areas.`,
-        timestamp: day.date,
+        details: `Heavy rain forecast: ${day.rain}mm in ${index} day${index !== 1 ? 's' : ''}. ${day.rain > 100 ? 'Severe flooding possible.' : 'Moderate flooding risk.'}`,
+        timestamp: forecastDate,
         type: 'future',
         tips: [
           'Clear drainage systems',
-          'Move valuables to higher ground',
-          'Avoid driving through water'
+          'Prepare emergency supplies',
+          'Avoid flood-prone areas'
         ]
       });
     }
-  });
-  
-  // Storm warning
-  forecast.forEach((day, index) => {
+    
+    // Storms
     if (day.condition === 'Thunderstorm') {
-      const daysFromNow = index;
       alerts.push({
-        id: Date.now() + 20 + index,
+        id: `storm-future-${forecastDate.getTime()}`,
         category: 'Storm',
-        severity: 'High',
+        severity: day.wind > 60 ? 'High' : 'Medium',
         location: currentWeather.location,
-        details: `Thunderstorm forecast in ${daysFromNow} day${daysFromNow !== 1 ? 's' : ''}. Heavy rain and strong winds expected.`,
-        timestamp: day.date,
+        details: `Thunderstorm forecast in ${index} day${index !== 1 ? 's' : ''}. Heavy rain and winds expected.`,
+        timestamp: forecastDate,
         type: 'future',
         tips: [
-          'Secure loose outdoor items',
-          'Stay away from windows',
-          'Unplug sensitive electronics'
+          'Secure outdoor items',
+          'Charge devices',
+          'Prepare flashlights'
         ]
       });
     }

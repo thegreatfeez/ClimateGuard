@@ -1,4 +1,4 @@
-// src/hooks/useContracts.js
+// src/hooks/useContracts.js - UPDATED
 import { useMemo } from 'react';
 import { ethers } from 'ethers';
 import { useWeb3 } from '../context/Web3Context';
@@ -8,9 +8,10 @@ import {
   CarbonFootprintTrackerABI,
   EnvironmentalAlertsABI,
   RewardDistributorABI,
+  DAOVerifierABI
 } from '../contracts/abis';
 
-// 🆕 Subscription ABI
+// Subscription ABI
 const SubscriptionABI = [
   "function subscribe(uint8 tier) external payable",
   "function getUserTier(address user) external view returns (uint8)",
@@ -49,10 +50,14 @@ export const useContracts = () => {
         RewardDistributorABI,
         signerOrProvider
       ),
-     
       subscription: CONTRACT_ADDRESSES.SUBSCRIPTION ? new ethers.Contract(
         CONTRACT_ADDRESSES.SUBSCRIPTION,
         SubscriptionABI,
+        signerOrProvider
+      ) : null,
+      daoVerifier: CONTRACT_ADDRESSES.DAO_VERIFIER ? new ethers.Contract(
+        CONTRACT_ADDRESSES.DAO_VERIFIER,
+        DAOVerifierABI,
         signerOrProvider
       ) : null,
     };

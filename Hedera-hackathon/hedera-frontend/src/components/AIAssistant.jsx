@@ -1,8 +1,12 @@
-// src/components/AIAssistant.jsx
+// src/components/AIAssistant.jsx - IMPROVED VERSION
 import { useState, useRef, useEffect } from 'react';
 import { Send, Mic, X, Bot, User, Volume2, VolumeX } from 'lucide-react';
 
-function AIAssistant({ isOpen, onClose }) {
+// Get API key from environment variable
+const GEMINI_API_KEY = 'AIzaSyCmRmu_iLk4_QykI1WEMwY-DLSJM8nJmoI';
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
+
+function AIAssistant({ isOpen, onClose, weatherData, forecastData, alerts }) {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -20,23 +24,9 @@ function AIAssistant({ isOpen, onClose }) {
     "What should I do during a heatwave?",
     "How can I prepare for floods?",
     "Tips for reducing carbon footprint",
-    "What's the weather forecast?",
-    "How do I earn more tokens?"
+    "What's the weather like today?",
+    "Any weather alerts I should know about?"
   ];
-
-  const aiResponses = {
-    heatwave: "During a heatwave, follow these essential steps:\n\n1. Stay hydrated - drink water regularly even if you don't feel thirsty\n2. Stay indoors during peak heat hours (12 PM - 3 PM)\n3. Use fans or air conditioning if available\n4. Wear light, loose-fitting clothing\n5. Check on elderly neighbors and vulnerable individuals\n6. Avoid strenuous activities outdoors\n7. Never leave children or pets in parked vehicles\n\nStay safe! 🌡️",
-    
-    flood: "To prepare for floods, take these precautions:\n\n1. Create an emergency kit with essentials:\n   • Non-perishable food and water (3-day supply)\n   • Flashlights and batteries\n   • First aid supplies\n   • Important documents in waterproof container\n\n2. Know your evacuation routes\n3. Move valuables to higher floors\n4. Install sump pumps in basements\n5. Stay informed via weather alerts\n6. Avoid walking or driving through floodwater\n7. Turn off utilities if instructed\n\nPreparation saves lives! 🌊",
-    
-    carbon: "Here are effective ways to reduce your carbon footprint:\n\n1. Transportation:\n   • Use public transport, bike, or walk\n   • Carpool when possible\n   • Consider electric vehicles\n\n2. Home Energy:\n   • Switch to LED bulbs\n   • Use renewable energy sources\n   • Improve insulation\n\n3. Food:\n   • Eat more plant-based meals\n   • Buy local and seasonal produce\n   • Reduce food waste\n\n4. Consumption:\n   • Buy less, choose quality\n   • Recycle and compost\n   • Support sustainable brands\n\nLog these actions in ClimateGuard to earn tokens! 🌱",
-    
-    weather: "Based on your location (Lagos, Nigeria), here's your forecast:\n\n📅 Today: Partly cloudy, 32°C\n⚠️ Alert: High UV index - use sun protection\n\n📅 Tomorrow: Scattered thunderstorms, 28-31°C\n⚠️ Alert: Heavy rainfall expected in evening\n\n📅 Next 3 days: Partly cloudy with occasional rain\n\nUpgrade to Premium for 14-day forecasts! ☁️",
-    
-    tokens: "Maximize your token earnings:\n\n1. High-Value Activities (3x-5x multipliers):\n   • Tree planting: 3x points\n   • Renewable energy use: 2.5x points\n   • Recycling: 1.5x points\n\n2. Daily Consistency:\n   • Log activities regularly\n   • Complete verification quickly\n\n3. Premium Benefits:\n   • 2x token multiplier (Premium)\n   • 5x token multiplier (Enterprise)\n   • Priority verification\n\n4. DAO Participation:\n   • Vote on proposals for bonus tokens\n   • Refer friends for rewards\n\nStart logging your eco-actions today! 💰",
-    
-    default: "I can help you with:\n\n• Weather forecasts and alerts\n• Disaster preparedness tips\n• Carbon footprint reduction strategies\n• Token earning advice\n• Eco-friendly lifestyle recommendations\n\nJust ask me anything about climate and sustainability! 🌍"
-  };
 
   useEffect(() => {
     scrollToBottom();
@@ -46,25 +36,119 @@ function AIAssistant({ isOpen, onClose }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const getAIResponse = (userMessage) => {
-    const lowerMessage = userMessage.toLowerCase();
+  // Build context from weather data
+  const buildWeatherContext = () => {
+    let context = "Current Weather Context:\n";
     
-    if (lowerMessage.includes('heatwave') || lowerMessage.includes('heat')) {
-      return aiResponses.heatwave;
-    } else if (lowerMessage.includes('flood') || lowerMessage.includes('rain') || lowerMessage.includes('water')) {
-      return aiResponses.flood;
-    } else if (lowerMessage.includes('carbon') || lowerMessage.includes('footprint') || lowerMessage.includes('reduce') || lowerMessage.includes('eco')) {
-      return aiResponses.carbon;
-    } else if (lowerMessage.includes('weather') || lowerMessage.includes('forecast') || lowerMessage.includes('temperature')) {
-      return aiResponses.weather;
-    } else if (lowerMessage.includes('token') || lowerMessage.includes('earn') || lowerMessage.includes('reward')) {
-      return aiResponses.tokens;
+    if (weatherData) {
+      context += `Location: ${weatherData.location}\n`;
+      context += `Temperature: ${weatherData.temp}°C (Feels like: ${weatherData.feelsLike}°C)\n`;
+      context += `Conditions: ${weatherData.description}\n`;
+      context += `Humidity: ${weatherData.humidity}%\n`;
+      context += `Wind Speed: ${weatherData.windSpeed} km/h\n`;
+      context += `Visibility: ${weatherData.visibility} km\n`;
     } else {
-      return aiResponses.default;
+      context += "Weather data not currently available.\n";
+    }
+
+    if (forecastData && forecastData.length > 0) {
+      context += "\nUpcoming Forecast (next 3 days):\n";
+      forecastData.slice(0, 3).forEach((day, index) => {
+        const dayName = index === 0 ? 'Today' : index === 1 ? 'Tomorrow' : `Day ${index + 1}`;
+        context += `${dayName}: ${day.condition}, High: ${day.high}°C, Low: ${day.low}°C`;
+        if (day.rain > 0) context += `, Rain: ${day.rain}mm`;
+        context += `\n`;
+      });
+    } else {
+      context += "\nForecast data not currently available.\n";
+    }
+
+    if (alerts && alerts.length > 0) {
+      context += "\nActive Weather Alerts:\n";
+      alerts.slice(0, 3).forEach(alert => {
+        context += `- ${alert.category} (${alert.severity}): ${alert.details}\n`;
+      });
+    } else {
+      context += "\nNo active weather alerts at this time.\n";
+    }
+
+    return context;
+  };
+
+  // Call Gemini API
+  const callGeminiAPI = async (userMessage) => {
+    try {
+      const weatherContext = buildWeatherContext();
+      
+      const systemPrompt = `You are ClimateGuard AI, a helpful climate and weather assistant. You provide accurate, concise, and actionable advice about weather, climate change, disaster preparedness, and eco-friendly living.
+
+${weatherContext}
+
+Important guidelines:
+- Be friendly and conversational
+- Provide practical, actionable advice
+- Use the weather context provided when relevant to the user's question
+- If asked about weather and data is available, refer to the actual data provided
+- If weather data is not available, provide general advice
+- Keep responses concise but informative (2-3 paragraphs max)
+- Use emojis sparingly for clarity
+- Focus on safety and preparedness
+- Encourage sustainable practices
+- Never make up weather data - only use what's provided in the context
+
+User question: ${userMessage}
+
+Please provide a helpful response based on the context above.`;
+
+      const response = await fetch(GEMINI_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: systemPrompt
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 500,
+            topP: 0.8,
+            topK: 40
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.error('Gemini API Error:', errorData);
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Check if response has expected structure
+      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+        throw new Error('Invalid API response structure');
+      }
+      
+      const aiResponse = data.candidates[0].content.parts[0].text;
+      return aiResponse;
+
+    } catch (error) {
+      console.error('Gemini API Error:', error);
+      
+      // Provide helpful fallback response
+      if (error.message.includes('API request failed: 429')) {
+        return "I'm experiencing high demand right now. Please try again in a moment. In the meantime, you can check the weather dashboard for current conditions and alerts.";
+      }
+      
+      return "I apologize, but I'm having trouble connecting right now. Please try again in a moment. For immediate weather information, check the Alerts page or Dashboard.";
     }
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!input.trim()) return;
 
     const userMessage = {
@@ -74,28 +158,40 @@ function AIAssistant({ isOpen, onClose }) {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = input;
     setInput('');
     setIsTyping(true);
 
-    // Simulate AI thinking
-    setTimeout(() => {
+    try {
+      // Get AI response from Gemini
+      const aiResponseText = await callGeminiAPI(currentInput);
+      
       const aiMessage = {
         role: 'assistant',
-        content: getAIResponse(input),
+        content: aiResponseText,
         timestamp: new Date()
       };
       
       setMessages(prev => [...prev, aiMessage]);
-      setIsTyping(false);
 
       // Voice response if enabled
       if (voiceEnabled && 'speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(aiMessage.content);
+        const utterance = new SpeechSynthesisUtterance(aiResponseText);
         utterance.rate = 0.9;
         utterance.pitch = 1;
         window.speechSynthesis.speak(utterance);
       }
-    }, 1500);
+    } catch (error) {
+      console.error('Error getting AI response:', error);
+      const errorMessage = {
+        role: 'assistant',
+        content: "I'm sorry, I encountered an error processing your request. Please try again.",
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   const handleQuickQuestion = (question) => {
@@ -105,7 +201,7 @@ function AIAssistant({ isOpen, onClose }) {
 
   const handleVoiceInput = () => {
     if (!('webkitSpeechRecognition' in window)) {
-      alert('Voice input is not supported in your browser');
+      alert('Voice input is not supported in your browser. Please try Chrome or Edge.');
       return;
     }
 
@@ -121,8 +217,12 @@ function AIAssistant({ isOpen, onClose }) {
       setIsListening(false);
     };
 
-    recognition.onerror = () => {
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
       setIsListening(false);
+      if (event.error !== 'no-speech') {
+        alert(`Voice recognition error: ${event.error}`);
+      }
     };
 
     recognition.onend = () => {
@@ -152,7 +252,7 @@ function AIAssistant({ isOpen, onClose }) {
             </div>
             <div>
               <h2 className="text-white text-xl font-bold">ClimateGuard AI</h2>
-              <p className="text-white/80 text-sm">Your Climate Assistant</p>
+              <p className="text-white/80 text-sm">Powered by Gemini</p>
             </div>
           </div>
           
@@ -261,17 +361,19 @@ function AIAssistant({ isOpen, onClose }) {
                 placeholder="Ask me anything about climate..."
                 className="w-full bg-transparent text-white placeholder-gray-500 resize-none focus:outline-none"
                 rows={2}
+                disabled={isTyping}
               />
             </div>
             
             <button
               onClick={handleVoiceInput}
-              disabled={isListening}
+              disabled={isListening || isTyping}
               className={`w-12 h-12 rounded-xl flex items-center justify-center transition ${
                 isListening 
                   ? 'bg-red-500 animate-pulse' 
                   : 'bg-[#153029] hover:bg-[#1a3a2e] border border-[#1a3a2e]'
-              }`}
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+              title="Voice input"
             >
               <Mic size={20} className={isListening ? 'text-white' : 'text-gray-400'} />
             </button>
@@ -280,6 +382,7 @@ function AIAssistant({ isOpen, onClose }) {
               onClick={handleSendMessage}
               disabled={!input.trim() || isTyping}
               className="w-12 h-12 bg-[#22c55e] hover:bg-[#16a34a] rounded-xl flex items-center justify-center transition disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Send message"
             >
               <Send size={20} className="text-white" />
             </button>
