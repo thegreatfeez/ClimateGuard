@@ -9,7 +9,7 @@
 
 **Empowering communities to combat climate change through blockchain technology**
 
-[Live Demo](https://climateeguard.netlify.app/) • [Documentation](#features) • [Smart Contracts](#smart-contracts) • [Roadmap](#future-roadmap)
+[Live Demo](https://climateeguard.netlify.app/) • [Documentation](#features) • [Project Slides](https://drive.google.com/file/d/1aMh8aq68q_VscWNsUiedPb0QoI--bAfm/view?usp=drivesdk) • [Smart Contracts](#smart-contracts) • [Roadmap](#future-roadmap)
 
 </div>
 
